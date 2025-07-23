@@ -1,8 +1,8 @@
-function Invoke-ZendeskApiCall {
+function Invoke-ZeConvertndeskApiCall {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory=$true)]
-        [string]$Url = "https://justserve.zendesk.com",
+        [string]$Url,
 
         [Parameter(Mandatory=$false)]
         [string]$Method = 'GET',
@@ -14,7 +14,7 @@ function Invoke-ZendeskApiCall {
         [string]$Body
     )
 
-    $base64AuthInfo = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($Global:ZendeskEmail)/token:$($Global:ZendeskApiToken)"))
+    $base64AuthInfo = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("$($env:ZendeskEmail)/token:$($env:ZendeskApiToken)"))
 
     $defaultHeaders = @{
         "Authorization" = "Basic $base64AuthInfo"
@@ -28,7 +28,7 @@ function Invoke-ZendeskApiCall {
     }
 
     try {
-        $response = Invoke-RestMethod -Uri $Url -Method $Method -Headers $mergedHeaders -Body $Body -ContentType "application/json"
+        $response = Invoke-WebRequest -Uri $Url -Method $Method -Headers $mergedHeaders -Body $Body -ContentType "application/json"
 
         return $response
     }
@@ -93,7 +93,7 @@ function Add-Ticket {
 
     $jsonBody = $ticketBody | ConvertTo-Json -Depth 4
 
-    $url = "$($Global:ZendeskUrl)/api/v2/tickets.json"
+    $url = "$($env:ZendeskUrl)/api/v2/tickets"
 
     try {
         $response = Invoke-ZendeskApiCall -Url $url -Method 'POST' -Body $jsonBody
@@ -101,6 +101,25 @@ function Add-Ticket {
     }
     catch {
         Write-Error "Error adding ticket: $($_.Exception.Message)"
+        throw $_
+    }
+}
+
+function Get-Ticket {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)]
+        [int]$TicketId
+    )
+
+    $url = "$($env:ZendeskUrl)/api/v2/tickets/$($TicketId)"
+
+    try {
+        $response = Invoke-ZendeskApiCall -Url $url -Method 'GET'
+        return $response
+    }
+    catch {
+        Write-Error "Error getting ticket $($TicketId): $($_.Exception.Message)"
         throw $_
     }
 }
