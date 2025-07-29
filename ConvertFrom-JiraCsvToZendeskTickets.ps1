@@ -60,14 +60,7 @@ function ConvertFrom-JiraCsvToZendeskTickets {
     $JiraData = Import-Csv $jiraCsvPath
 
     Write-Host "Processing $($jiraData.Count) tickets from '$jiraCsvPath'..."
-    $skippedCount = 0
     $tickets = foreach ($jiraTicket in $jiraData) {
-
-        if ($null -eq $jiraTicket."Issue key") {
-            $skippedCount ++
-            Write-Warning "skipping line in csv file since the issue key column is empty. This makes $skippedCount lines skipped"
-            continue
-        }
 
         # Build the main ticket object structure that Zendesk expects.
         $zendeskTicketPayload = @{
