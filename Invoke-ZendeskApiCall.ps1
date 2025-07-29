@@ -2,7 +2,7 @@ function Invoke-ZendeskApiCall {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string]$Url,
+        [string]$UriPath,
 
         [Parameter(Mandatory = $false)]
         [string]$Method = 'GET',
@@ -31,11 +31,11 @@ function Invoke-ZendeskApiCall {
     }
 
     try {
-        $response = Invoke-WebRequest -Uri $Url -Method $Method -Headers $mergedHeaders -Body $Body -ContentType "application/json"
-        return $response
+        return Invoke-WebRequest -Uri "$($env:ZendeskUrl)/$($UriPath)" -Method $Method -Headers $mergedHeaders -Body $Body -ContentType "application/json"
     }
     catch {
-        Write-Error "Error making API call to $($Url): $($_.Exception.Message)"
+        Write-Error "Error making API call to $($UriPath): $($_.Exception.Message)"
         throw $_
     }
 }
+
