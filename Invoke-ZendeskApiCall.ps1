@@ -1,19 +1,19 @@
 function Invoke-ZendeskApiCall {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$Url,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$ZendeskEmail,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$Method = 'GET',
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [hashtable]$Headers,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$Body
     )
 
@@ -21,12 +21,13 @@ function Invoke-ZendeskApiCall {
 
     $defaultHeaders = @{
         "Authorization" = "Basic $base64AuthInfo"
-        "Content-Type" = "application/json"
+        "Content-Type"  = "application/json"
     }
 
     if ($Headers) {
         $mergedHeaders = $defaultHeaders + $Headers
-    } else {
+    }
+    else {
         $mergedHeaders = $defaultHeaders
     }
 
@@ -43,25 +44,25 @@ function Invoke-ZendeskApiCall {
 function Add-Ticket {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$Subject,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$Comment,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$RequesterEmail,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$RequesterName,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string[]]$Tags,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$Type,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string]$Priority
     )
 
@@ -108,45 +109,46 @@ function Add-Ticket {
 }
 
 
-function AddTicketsBulk(){
+function AddTicketsBulk() {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$baseUrl,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$ZendeskEmail,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$jiraCsvPath
     )
-    $env:ZendeskApiToken=(get-content "./.env.txt").split('=')[1]
+    $env:ZendeskApiToken = (get-content "./.env.txt").split('=')[1]
 
     . ./Convert-JiraToZendesk.ps1
     
-    $tickets=ConvertFrom-JiraCsvToZendeskTicket -jiraCsvPath $jiraCsvPath
+    $tickets = ConvertFrom-JiraCsvToZendeskTicket -jiraCsvPath $jiraCsvPath
     $url = "$($baseUrl)/api/v2/tickets/create_many.json"
     
 
     #convert tickets array into batches of no more than 100
-    $ticketBatches=New-Object System.Collections.ArrayList
-    for($i=0; $i -lt $tickets.Length ;$i++){   
-        $ticket=$tickets[$i]
-        $ticketBatch=[Math]::Floor($i/100)
+    $ticketBatches = New-Object System.Collections.ArrayList
+    for ($i = 0; $i -lt $tickets.Length ; $i++) {   
+        $ticket = $tickets[$i]
+        $ticketBatch = [Math]::Floor($i / 100)
 
         #since ticket batch starts out as zero a new batch is automatically created right from the beginning
-        if($i-1 -eq ($ticketBatch*100)-1){
-            $newArray=New-Object System.Collections.ArrayList
+        if ($i - 1 -eq ($ticketBatch * 100) - 1) {
+            $newArray = New-Object System.Collections.ArrayList
             $newArray.Add($ticket)
             $ticketBatches.Add($newArray) 
-        }else{
+        }
+        else {
             $ticketBatches[$ticketBatch].Add($ticket)
         }
     }
 
-    foreach($batch in $ticketBatches){
+    foreach ($batch in $ticketBatches) {
         try {
-            $jsonBody = @{tickets=$batch} | ConvertTo-Json -Depth 7
+            $jsonBody = @{tickets = $batch } | ConvertTo-Json -Depth 7
             $response = Invoke-ZendeskApiCall -Url $url -ZendeskEmail $zendeskEmail -Method 'POST' -Body $jsonBody
             Write-Output $response
         }
@@ -160,7 +162,7 @@ function AddTicketsBulk(){
 function Get-Ticket {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [int]$TicketId
     )
 
