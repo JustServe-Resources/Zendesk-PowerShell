@@ -11,18 +11,6 @@ function ConvertFrom-JiraCsvToZendeskTickets {
 
     You MUST customize the mapping sections (hashtables) within this script to match your
     specific Jira and Zendesk configurations before running.
-
-.EXAMPLE
-    .\Convert-JiraToZendesk.ps1
-
-    Processes the CSV file specified in $jiraCsvPath and outputs one JSON object per ticket
-    to the console.
-
-.EXAMPLE
-    .\Convert-JiraToZendesk.ps1 | ForEach-Object { $_ | Out-File -FilePath "C:\temp\tickets\$($_.ticket.external_id).json" }
-
-    Processes the CSV and saves each resulting JSON payload into a separate file named
-    after the Jira issue key.
 #>
     [CmdletBinding()]
     param (
@@ -83,36 +71,36 @@ function ConvertFrom-JiraCsvToZendeskTickets {
 
         # Build the main ticket object structure that Zendesk expects.
         $zendeskTicketPayload = @{
-                "id"             = $jiraTicket.'Issue id'
-                "external_id"    = $null
-                "via"            = @{
-                    "channel" = "web"
-                    "source"  = @{
-                        "from" = @{}
-                        "to"   = @{}
-                        "rel"  = $null
-                    }
+            "id"             = $jiraTicket.'Issue id'
+            "external_id"    = $null
+            "via"            = @{
+                "channel" = "web"
+                "source"  = @{
+                    "from" = @{}
+                    "to"   = @{}
+                    "rel"  = $null
                 }
+            }
             
-                "created_at"     = "$((Get-Date $jiraTicket.Created).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
-                "updated_at"     = "$((Get-Date $jiraTicket.Updated).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
-                "type"           = "problem"
-                "subject"        = "$($jiraTicket.Summary)"
-                "description"    = "$($jiraTicket.Description)"
-                "comment"        = @{
-                    "body"   = "$($jiraTicket.Description)`n<hr>`n*Original Jira Comment:*`n$($jiraTicket.Comment)"
-                    "public" = $false
-                }
-                "status"         = "$($statusMap[$jiraTicket.Status])"
-                "requester_id"   = 9424731678747 # Add justus as the requester
-                "group_id"       = 8978275488283 # add to support team
-                "ticket_form_id" = 11002305068315 # report a concern with a project form
-                "brand_id"       = 8978259459099 # I dunno what this is. if it's wrong, fix it
-                "custom_fields"  = @{
-                    "$($fieldMap["Feature Request"])" = ($jiraTicket.'Issue Type' -eq "New Feature")
-                    "$($fieldMap["Regression"])"      = ($jiraTicket.'Issue Type' -eq "Regression")
-                    "$($fieldMap["Jira Ticket"])"     = ($jiraTicket.'Issue id')
-                }
+            "created_at"     = "$((Get-Date $jiraTicket.Created).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
+            "updated_at"     = "$((Get-Date $jiraTicket.Updated).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
+            "type"           = "problem"
+            "subject"        = "$($jiraTicket.Summary)"
+            "description"    = "$($jiraTicket.Description)"
+            "comment"        = @{
+                "body"   = "$($jiraTicket.Description)`n<hr>`n*Original Jira Comment:*`n$($jiraTicket.Comment)"
+                "public" = $false
+            }
+            "status"         = "$($statusMap[$jiraTicket.Status])"
+            "requester_id"   = 9424731678747 # Add justus as the requester
+            "group_id"       = 8978275488283 # add to support team
+            "ticket_form_id" = 11002305068315 # report a concern with a project form
+            "brand_id"       = 8978259459099 # I dunno what this is. if it's wrong, fix it
+            "custom_fields"  = @{
+                "$($fieldMap["Feature Request"])" = ($jiraTicket.'Issue Type' -eq "New Feature")
+                "$($fieldMap["Regression"])"      = ($jiraTicket.'Issue Type' -eq "Regression")
+                "$($fieldMap["Jira Ticket"])"     = ($jiraTicket.'Issue id')
+            }
         }
         $zendeskTicketPayload
     }
