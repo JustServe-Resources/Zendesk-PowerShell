@@ -1,42 +1,19 @@
-function Add-Tickets() {
+function Add-Tickets {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
-        [string]$jiraCsvPath
+        [PSCustomObject]
+        $JiraTickets
     )
 
     Test-ZendeskEnvironment
-    
-    $tickets = ConvertFrom-JiraCsvToZendeskTicket -jiraCsvPath $jiraCsvPath
-    $url = "$($baseUrl)/api/v2/tickets/create_many.json"
-    
 
-    #convert tickets array into batches of no more than 100
-    $ticketBatches = New-Object System.Collections.ArrayList
-    for ($i = 0; $i -lt $tickets.Length ; $i++) {   
-        $ticket = $tickets[$i]
-        $ticketBatch = [Math]::Floor($i / 100)
+    Write-Host "Found $($JiraTickets.Count) tickets to import. Processing in batches of $batchSize."
 
-        #since ticket batch starts out as zero a new batch is automatically created right from the beginning
-        if ($i - 1 -eq ($ticketBatch * 100) - 1) {
-            $newArray = New-Object System.Collections.ArrayList
-            $newArray.Add($ticket)
-            $ticketBatches.Add($newArray) 
-        }
-        else {
-            $ticketBatches[$ticketBatch].Add($ticket)
-        }
+    $endRange = [math]::Min(99, $JiraTickets.Count)
+    if ($JiraTickets.Count -lt $endRange) {
+        Add-Tickets $JiraTickets[($endRange + 1) .. ($JiraTickets.Count - 1)]
     }
-
-    foreach ($batch in $ticketBatches) {
-        try {
-            $jsonBody = @{tickets = $batch } | ConvertTo-Json -Depth 7
-            $response = Invoke-ZendeskApiCall -Url $url -ZendeskEmail $zendeskEmail -Method 'POST' -Body $jsonBody
-            Write-Output $response
-        }
-        catch {
-            Write-Error "Error adding tickets: $($_.Exception.Message)"
-            throw $_
-        }
-    }
+    $body = @(tickets = $JiraTickets[0..$endRange]) | ConvertTo-Json -Depth 100
+    return Invoke-ZendeskApiCall -UriPath "/api/v2/tickets/create_many.json" -Method 'POST' -Body $body
 }
