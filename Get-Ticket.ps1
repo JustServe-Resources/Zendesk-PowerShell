@@ -8,11 +8,13 @@ function Get-Ticket {
         .DESCRIPTION
             This function constructs the appropriate URL for the Zendesk Tickets API
             and uses Invoke-ZendeskApiCall to perform a GET request for a specific ticket.
-            It requires the following environment variables to be set:
+
+        .NOTES
+            This function requires the following environment variables to be set:
             - ZendeskUrl
             - ZendeskEmail
             - ZendeskApiToken
-
+            
         .PARAMETER TicketId
             The unique identifier of the Zendesk ticket to retrieve.
         #>

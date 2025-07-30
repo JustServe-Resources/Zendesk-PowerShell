@@ -1,6 +1,21 @@
 function Add-Tickets {
     [CmdletBinding()]
     param (
+        <#
+        .SYNOPSIS
+            Adds multiple tickets to Zendesk using the create_many API endpoint.
+
+        .DESCRIPTION
+            This function takes an array of ticket objects (typically generated from Jira CSV
+            exports) and sends them to Zendesk's bulk ticket creation API. It handles
+            batching of tickets to adhere to API limits (currently 100 tickets per request).
+
+        .NOTES
+            This function requires the following environment variables to be set:
+            - ZendeskUrl
+            - ZendeskEmail
+            - ZendeskApiToken
+        #>
         [Parameter(Mandatory = $true)]
         [array]
         $JiraTickets

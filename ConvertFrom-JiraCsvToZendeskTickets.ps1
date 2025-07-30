@@ -11,6 +11,12 @@ function ConvertFrom-JiraCsvToZendeskTickets {
 
     You MUST customize the mapping sections (hashtables) within this script to match your
     specific Jira and Zendesk configurations before running.
+
+    .NOTES
+    This function requires the following environment variables to be set:
+    - ZendeskUrl
+    - ZendeskEmail
+    - ZendeskApiToken
 #>
     [CmdletBinding()]
     param (
