@@ -24,7 +24,12 @@ function Add-Tickets {
     Test-ZendeskEnvironment
 
     $endRange = [math]::Min(99, $JiraTickets.Count)
-    Write-Host "Found $($JiraTickets.Count) tickets to import. Processing $($endRange - 1) tickets."
+    $progressParams = @{
+        Activity       = "Adding Zendesk Tickets"
+        Status         = "Found $($JiraTickets.Count) tickets to import. Processing $($endRange - 1) tickets."
+        PercentComplete = 0
+    }
+    Write-Progress @progressParams
     $responses = @()
     if ($JiraTickets.Count -lt $endRange) {
         $responses += Add-Tickets $JiraTickets[($endRange + 1) .. ($JiraTickets.Count - 1)]
