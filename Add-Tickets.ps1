@@ -38,7 +38,7 @@ function Add-Tickets {
     $responses = Invoke-ZendeskApiCall -UriPath "/api/v2/tickets/create_many.json" -Method 'POST' -Body $body
     foreach ($response in $responses) {
         $Content = ($response.Content | ConvertFrom-Json -Depth 100).job_status
-        Write-Verbose "ZENDESK RESPONSE SUMMARY:`n`t`tid: $($Content.id)`n`t`turl: $($Content.url)`n`t`tstatus: $($Content.status) `n`t`ttotal: $($Content.total)"
+        Write-Output "ZENDESK RESPONSE SUMMARY:`n`t`tid: $($Content.id)`n`t`turl: $($Content.url)`n`t`tstatus: $($Content.status) `n`t`ttotal: $($Content.total)"
     }
     return $responses
 }

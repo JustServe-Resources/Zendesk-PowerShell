@@ -23,45 +23,31 @@ function ConvertFrom-JiraCsvToZendeskTickets {
         [Parameter(Mandatory = $true)]
         [Alias('f')]
         [ValidateScript({ Test-Path -Path $_ })]
-        [string]$jiraCsvPath
+        [string]$jiraCsvPath,
+        [Parameter(Mandatory = $false)]
+        [Array[PSCustomObject]]
+        $Fields,
+        [Parameter(Mandatory = $false)]
+        [hashtable]
+        $statusMap,
+        [Parameter(Mandatory = $false)]
+        [PSCustomObject]
+        $sampleTicket
     )
-
-    $fieldMap = @{
-        "Question"                             = 38622750189851
-        "Approval Status"                      = 39065569798171
-        "Actual Behavior"                      = 30573553563675
-        "Assignee"                             = 8978283930395
-        "Browser / App version"                = 30837891882523
-        "Category of Concern"                  = 10800716325019
-        "Description"                          = 8978290634779
-        "Email Requester's City"               = 34844017990171
-        "Expected Behavior"                    = 30572845583899
-        "Feature Request"                      = 39186352385051
-        "Group"                                = 8978312161819
-        "Jira Ticket"                          = 39188651800603
-        "Priority"                             = 8978259209115
-        "Problem Status"                       = 39187352002203
-        "Regression"                           = 39188175429147
-        "Regression Of"                        = 39188323306011
-        "Report a concern - Organization Link" = 11678997467035
-        "Report a concern - Project Link"      = 11678970701467
-        "Steps to produce behavior"            = 30574241522075
-        "Subject"                              = 8978275191707
-        "Task"                                 = 38720689571483
-        "Ticket status"                        = 10824624488347
-        "Type"                                 = 8978275195931
-        "User Type Affected"                   = 39187459300251
+    if ($null -eq $Fields) {
+        $Fields = Get-Fields
     }
-
-    $statusMap = @{
-        "Accepted"    = "Solved"
-        "Analysis"    = "Open"
-        "Blocked"     = "Open"
-        "Closed"      = "Open"
-        "In Progress" = "Open"
-        "New"         = "Open"
-        "Ready"       = "Open"
-        "Resolved"    = "Solved"
+    if ($null -eq $statusMap) {
+        $statusMap = @{
+            "Accepted"    = "Solved"
+            "Analysis"    = "Open"
+            "Blocked"     = "Open"
+            "Closed"      = "Open"
+            "In Progress" = "Open"
+            "New"         = "Open"
+            "Ready"       = "Open"
+            "Resolved"    = "Solved"
+        }
     }
     $JiraData = Import-Csv $jiraCsvPath
 
@@ -80,7 +66,6 @@ function ConvertFrom-JiraCsvToZendeskTickets {
                     "rel"  = $null
                 }
             }
-            
             "created_at"     = "$((Get-Date $jiraTicket.Created).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
             "updated_at"     = "$((Get-Date $jiraTicket.Updated).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
             "type"           = "problem"
@@ -91,14 +76,15 @@ function ConvertFrom-JiraCsvToZendeskTickets {
                 "public" = $false
             }
             "status"         = "$($statusMap[$jiraTicket.Status])"
-            "requester_id"   = 9424731678747 # Add justus as the requester
-            "group_id"       = 8978275488283 # add to support team
-            "ticket_form_id" = 11002305068315 # report a concern with a project form
-            "brand_id"       = 8978259459099 # I dunno what this is. if it's wrong, fix it
+            "requester_id"   = $sampleTicket.requester_id # Add justus as the requester
+            "group_id"       = $sampleTicket.group_id
+            "ticket_form_id" = $sampleTicket.ticket_form_id
+            "brand_id"       = $sampleTicket.brand_id
+            "submitter_id"   = $sampleTicket.submitter_id
             "custom_fields"  = @{
-                "$($fieldMap["Feature Request"])" = ($jiraTicket.'Issue Type' -eq "New Feature")
-                "$($fieldMap["Regression"])"      = ($jiraTicket.'Issue Type' -eq "Regression")
-                "$($fieldMap["Jira Ticket"])"     = ($jiraTicket.'Issue id')
+                "$($Fields.Where({$_.title -eq 'Feature Request' -and $_.type -eq 'checkbox'}))" = ($jiraTicket.'Issue Type' -eq "New Feature")
+                "$($Fields.Where({$_.title -eq 'Regression'}))"                                  = ($jiraTicket.'Issue Type' -eq "Regression")
+                "$($Fields.Where({$_.title -eq 'Jira Ticket'}))"                                 = ($jiraTicket.'Issue id')
             }
         }
         $zendeskTicketPayload
