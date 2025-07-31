@@ -13,7 +13,7 @@ function Test-ZendeskEnvironment {
     #>
     foreach ($envVar in @("ZendeskEmail", "ZendeskApiToken", "ZendeskUrl")) {
         $missingVars = @()
-        if (-not (Test-Path -Path "Env:$envVar")) {
+        if ($null -eq [Environment]::GetEnvironmentVariable($envVar) || [Environment]::GetEnvironmentVariable($envVar).Length -eq 0) {
             $missingVars += $envVar
         }
     }
