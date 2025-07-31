@@ -25,7 +25,7 @@ function ConvertFrom-JiraCsvToZendeskTickets {
         [ValidateScript({ Test-Path -Path $_ })]
         [string]$jiraCsvPath,
         [Parameter(Mandatory = $false)]
-        [Array[PSCustomObject]]
+        [Array]
         $Fields,
         [Parameter(Mandatory = $false)]
         [hashtable]
@@ -82,9 +82,10 @@ function ConvertFrom-JiraCsvToZendeskTickets {
             "brand_id"       = $sampleTicket.brand_id
             "submitter_id"   = $sampleTicket.submitter_id
             "custom_fields"  = @{
-                "$($Fields.Where({$_.title -eq 'Feature Request' -and $_.type -eq 'checkbox'}))" = ($jiraTicket.'Issue Type' -eq "New Feature")
-                "$($Fields.Where({$_.title -eq 'Regression'}))"                                  = ($jiraTicket.'Issue Type' -eq "Regression")
-                "$($Fields.Where({$_.title -eq 'Jira Ticket'}))"                                 = ($jiraTicket.'Issue id')
+                "$($Fields.Where({$_.title -eq 'Feature Request' -and $_.type -eq 'checkbox'}).id)" = ($jiraTicket.'Issue Type' -eq "New Feature")
+                "$($Fields.Where({$_.title -eq 'Regression'}).id)"                                  = ($jiraTicket.'Issue Type' -eq "Regression")
+                "$($Fields.Where({$_.title -eq 'Jira Ticket'}).id)"                                 = ($jiraTicket.'Issue id')
+                "$($Fields.Where({$_.title -eq 'Steps to produce behavior'}).id)" = ($jiraTicket.'Custom field (Steps To Reproduce)')
             }
         }
         $zendeskTicketPayload

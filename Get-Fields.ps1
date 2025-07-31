@@ -15,5 +15,5 @@ function Get-Fields {
         - ZendeskEmail
         - ZendeskApiToken
     #>
-    return $(Invoke-ZendeskApiCall -UriPath "/api/v2/ticket_fields" -Method 'GET').Content | ConvertFrom-Json
+    return (($(Invoke-ZendeskApiCall -UriPath "/api/v2/ticket_fields" -Method 'GET').Content) | ConvertFrom-Json).ticket_fields
 }
