@@ -24,7 +24,9 @@ function Get-Ticket {
     Test-ZendeskEnvironment
 
     try {
-        return Invoke-ZendeskApiCall -UriPath "/api/v2/tickets/$($TicketId)"-Method 'GET'
+        $response = Invoke-ZendeskApiCall -UriPath "/api/v2/tickets/$($TicketId)"-Method 'GET'
+        $content = $response.Content | ConvertFrom-Json
+        return $content.ticket
     }
     catch {
         Write-Error "Error getting ticket $($TicketId): $($_.Exception.Message)"

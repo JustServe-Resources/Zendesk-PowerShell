@@ -31,7 +31,7 @@ function ConvertFrom-JiraCsvToZendeskTickets {
         [hashtable]
         $statusMap,
         [Parameter(Mandatory = $false)]
-        [PSCustomObject]
+        [String]
         $sampleTicket
     )
     if ($null -eq $Fields) {
@@ -48,6 +48,9 @@ function ConvertFrom-JiraCsvToZendeskTickets {
             "Ready"       = "Open"
             "Resolved"    = "Solved"
         }
+    }
+    if ($null -ne $sampleTicket && $sampleTicket.Length -gt 0) {
+        $sampleTicket = Get-Ticket($sampleTicket)
     }
     $JiraData = Import-Csv $jiraCsvPath
 
@@ -70,22 +73,27 @@ function ConvertFrom-JiraCsvToZendeskTickets {
             "updated_at"     = "$((Get-Date $jiraTicket.Updated).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"))"
             "type"           = "problem"
             "subject"        = "$($jiraTicket.Summary)"
-            "description"    = "$($jiraTicket.Description)"
+            "description"    = "$($jiraTicket.Description -ne '' ? $jiraTicket.Description : $jiraTicket.Summary)"
             "comment"        = @{
-                "body"   = "$($jiraTicket.Description)`n<hr>`n*Original Jira Comment:*`n$($jiraTicket.Comment)"
+                "body"   = "$($jiraTicket.Description)`n"
                 "public" = $false
             }
             "status"         = "$($statusMap[$jiraTicket.Status])"
-            "requester_id"   = $sampleTicket.requester_id # Add justus as the requester
-            "group_id"       = $sampleTicket.group_id
-            "ticket_form_id" = $sampleTicket.ticket_form_id
-            "brand_id"       = $sampleTicket.brand_id
-            "submitter_id"   = $sampleTicket.submitter_id
+            "requester_id"   = $sampleTicket.requester_id # will provide empty string if unset.
+            "group_id"       = $sampleTicket.group_id # will provide empty string if unset.
+            "ticket_form_id" = $sampleTicket.ticket_form_id # will provide empty string if unset.
+            "brand_id"       = $sampleTicket.brand_id # will provide empty string if unset.
+            "submitter_id"   = $sampleTicket.submitter_id # will provide empty string if unset.
             "custom_fields"  = @{
                 "$($Fields.Where({$_.title -eq 'Feature Request' -and $_.type -eq 'checkbox'}).id)" = ($jiraTicket.'Issue Type' -eq "New Feature")
-                "$($Fields.Where({$_.title -eq 'Regression'}).id)"                                  = ($jiraTicket.'Issue Type' -eq "Regression")
-                "$($Fields.Where({$_.title -eq 'Jira Ticket'}).id)"                                 = ($jiraTicket.'Issue id')
-                "$($Fields.Where({$_.title -eq 'Steps to produce behavior'}).id)" = ($jiraTicket.'Custom field (Steps To Reproduce)')
+                # "$($Fields.Where({ $_.title -eq 'Regression' }).id)"                                  = ($jiraTicket.'Issue Type' -eq "Regression")
+                "$($Fields.Where({ $_.title -eq 'Jira Ticket' }).id)"                               = ($jiraTicket.'Issue key')
+                "$($Fields.Where({ $_.title -eq 'Steps to produce behavior' }).id)"                 = `
+                ($jiraTicket.'Custom field (Steps To Reproduce)' -ne "" ? $jiraTicket.'Custom field (Steps To Reproduce)' : "Please Add This Information")
+                "$($Fields.Where({ $_.title -eq 'Actual Behavior' }).id)"                           = `
+                ($jiraTicket.'Custom field (Actual Outcome)' -ne "" ? $jiraTicket.'Custom field (Actual Outcome)' : "Please Add This Information")
+                "$($Fields.Where({ $_.title -eq 'Expected Behavior' }).id)"                         = `
+                ($jiraTicket.'Custom field (Expected Outcome)' -ne "" ? $jiraTicket.'Custom field (Expected Outcome)' : "Please Add This Information")
             }
         }
         $zendeskTicketPayload

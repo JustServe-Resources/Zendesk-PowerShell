@@ -58,6 +58,7 @@ function Invoke-ZendeskApiCall {
     }
 
     try {
+        Write-Debug "Sending request:`n`t$($env:ZendeskUrl)/$($UriPath) `n`tMethod: $($Method) `n`tAuthHeader: $($mergedHeaders.Authorization) `n`tBody: $($Body)"
         return Invoke-WebRequest -Uri "$($env:ZendeskUrl)/$($UriPath)" -Method $Method -Headers $mergedHeaders -Body $Body -ContentType "application/json"
     }
     catch {
