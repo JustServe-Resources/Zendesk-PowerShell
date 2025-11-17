@@ -35,7 +35,7 @@ function Add-Tickets {
         $responses += Add-Tickets $JiraTickets[($endRange + 1) .. ($JiraTickets.Count - 1)]
     }
     $body = @{tickets = $JiraTickets[0..$endRange]} | ConvertTo-Json -Depth 100
-    $responses = Invoke-ZendeskApiCall -UriPath "/api/v2/tickets/create_many.json" -Method 'POST' -Body $body
+    $responses = Invoke-ZendeskApiCall -UriPath "/api/v2/imports/tickets" -Method 'POST' -Body $body
     foreach ($response in $responses) {
         $Content = ($response.Content | ConvertFrom-Json -Depth 100).job_status
         Write-Verbose "ZENDESK RESPONSE SUMMARY:`n`tid: $($Content.id)`n`turl: $($Content.url)`n`tstatus: $($Content.status) `n`ttotal: $($Content.total)"
