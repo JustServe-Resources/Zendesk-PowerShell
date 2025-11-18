@@ -11,15 +11,15 @@ function Test-ZendeskEnvironment {
     .NOTES
         This function does not return any value. It throws an error if environment variables are not set.
     #>
+    $missingVars = @()
+
     foreach ($envVar in @("ZendeskEmail", "ZendeskApiToken", "ZendeskUrl")) {
-        $missingVars = @()
-        if ($null -eq [Environment]::GetEnvironmentVariable($envVar) || [Environment]::GetEnvironmentVariable($envVar).Length -eq 0) {
+        if ($null -eq [Environment]::GetEnvironmentVariable($envVar) -or [Environment]::GetEnvironmentVariable($envVar).Length -eq 0) {
             $missingVars += $envVar
         }
     }
 
     if ($missingVars.Count -gt 0) {
-        $errorMessage = "Required environment variable(s) not set: $($missingVars -join ', ')"
-        throw $errorMessage
+        Write-Error "Required environment variable(s) not set: $($missingVars -join ', ')"
     }
 }
